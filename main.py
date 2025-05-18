@@ -3,13 +3,14 @@ import subprocess
 import tempfile
 import shutil
 import yaml
-import json # Added to handle JSON
+import json  # Added to handle JSON
 from pathlib import Path
 from datetime import datetime
 import argparse
 import time
 import logging
 import re
+import shlex
 
 # === Logger Setup ===
 # Configure logging to provide informative output.
@@ -167,16 +168,23 @@ class ContainerManager:
         if not self.container_id:
             raise RuntimeError("Container not available for command execution.")
 
-        logger.info(f"Executing in container {self.container_id}: {command}")
-        # Using shell=True for bash -c, ensure command is properly escaped if constructed from parts.
-        # Original script's escaping was simple: command.replace('"', r'\"')
-        # For more complex commands, consider building cmd_list for exec if possible,
-        # or use more robust escaping if command content is dynamic.
-        escaped_command = command.replace('"', r'\"') # Basic escaping from original script
-        full_cmd_str = f"{self.container_tool} exec {self.container_id} bash -c \"{escaped_command}\""
+        # Escape the command for safe execution with bash -c
+        escaped_command = shlex.quote(command)
+
+        cmd = [
+            self.container_tool,
+            "exec",
+            self.container_id,
+            "bash",
+            "-c",
+            escaped_command,
+        ]
+
+        full_cmd_str = " ".join(cmd)
+        logger.info(f"Executing in container {self.container_id}: {full_cmd_str}")
 
         # Set check=False to return results even if the command fails, instead of raising an error
-        result = self._run_command(full_cmd_str, shell=True, check=False)
+        result = self._run_command(cmd, shell=False, check=False)
 
         if result.returncode == 0:
             logger.info(f"Successfully executed in container: {command}")
