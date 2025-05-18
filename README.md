@@ -30,6 +30,16 @@ By default `podman` is used. To use Docker instead, pass `--container-tool docke
 
 The resulting report is written to `output.json`. An example output is included in `example-output.json`.
 
+### Formatting a JSON report
+
+Convert an existing JSON report to a plain text summary:
+
+```bash
+python -m envdiff.cli --summarize output.json --text-output report.txt
+```
+
+If `--text-output` is omitted, the summary is printed to stdout.
+
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.

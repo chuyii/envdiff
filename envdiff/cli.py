@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .analysis import run_analysis
 from .container import DEFAULT_CONTAINER_TOOL
+from .report_formatter import json_report_to_text
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,6 +42,16 @@ def main() -> None:
         help="Container runtime to use (podman or docker).",
     )
     parser.add_argument(
+        "--summarize",
+        type=Path,
+        help="Path to an existing JSON report to convert to plain text.",
+    )
+    parser.add_argument(
+        "--text-output",
+        type=Path,
+        help="File to save the human readable report. Defaults to stdout if omitted.",
+    )
+    parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
@@ -55,6 +66,16 @@ def main() -> None:
         logger.debug("Verbose logging enabled.")
 
     try:
+        if args.summarize:
+            text = json_report_to_text(args.summarize)
+            if args.text_output:
+                args.text_output.parent.mkdir(parents=True, exist_ok=True)
+                with open(args.text_output, "w", encoding="utf-8") as f:
+                    f.write(text)
+            else:
+                print(text)
+            return
+
         run_analysis(args.input, args.output, args.container_tool)
     except FileNotFoundError as e:
         logger.critical(f"A critical file was not found: {e}")
