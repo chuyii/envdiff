@@ -487,7 +487,7 @@ def run_analysis(config_path: Path, output_report_path: Path, container_tool: st
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Analyzes differences in a container environment before and after executing specified operations. " \
+        description="Analyzes differences in a container environment before and after executing specified operations." \
                     "Generates a JSON report detailing file system changes, command output variations, and execution results.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
