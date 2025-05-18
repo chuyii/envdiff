@@ -7,7 +7,7 @@ name = "envdiff"
 version = "0.1.0"
 description = "Analyze container environment differences and generate JSON reports."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 authors = [{name = "chuyii", email = "contact@chuyii.net"}]
 license = {file = "LICENSE"}
 classifiers = [
