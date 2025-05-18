@@ -7,6 +7,16 @@
 - Python 3.8+
 - Either `podman` or `docker` must be installed and accessible in `PATH`.
 
+## Installation
+
+Install the package from the repository root using `pip`:
+
+```bash
+pip install .
+```
+
+This will provide the `envdiff` command for running the tool.
+
 ## Usage
 
 1. Prepare a YAML configuration file. An example is provided in `example-input.yaml`.
