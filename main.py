@@ -162,8 +162,8 @@ class ContainerManager:
         self._run_command([self.container_tool, "cp", str(src_path), dest_path_str])
         logger.info(f"Successfully copied '{src_path}' to '{dest_path_str}'.")
 
-    def execute_command(self, command: str) -> dict: # Changed return type to dict
-        """Executes a command inside the running container and returns its output."""
+    def execute_command(self, command: str) -> dict:
+        """Executes a command inside the running container and returns a dictionary with the executed command, stdout, stderr, and return_code."""
         if not self.container_id:
             raise RuntimeError("Container not available for command execution.")
 
