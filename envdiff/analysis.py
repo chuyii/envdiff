@@ -1,0 +1,156 @@
+import json
+import logging
+import re
+import tempfile
+from datetime import datetime
+from pathlib import Path
+
+from .container import ContainerManager
+from .diff import generate_diff_report
+import yaml
+
+logger = logging.getLogger(__name__)
+
+
+def load_config(config_path: Path) -> dict:
+    """Load YAML configuration from the given path."""
+    logger.info(f"Loading configuration from '{config_path}'...")
+    if not config_path.is_file():
+        logger.error(f"Configuration file not found: {config_path}")
+        raise FileNotFoundError(f"Configuration file not found: {config_path}")
+    with open(config_path, "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+    logger.info("Configuration loaded successfully.")
+    return config
+
+
+def run_analysis(config_path: Path, output_report_path: Path, container_tool: str):
+    """Main analysis workflow."""
+    config = load_config(config_path)
+    base_image = config.get("base_image")
+    if not base_image:
+        logger.error("Configuration error: 'base_image' not specified in input YAML.")
+        raise ValueError("'base_image' must be defined in the configuration.")
+
+    output_data = {
+        "report_metadata": {
+            "generated_on": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "container_tool": container_tool,
+        },
+        "definitions": config,
+        "main_operation_results": [],
+        "diff_reports": {
+            "filesystem_rq": None,
+            "filesystem_urN": None,
+            "command_outputs": [],
+        },
+    }
+
+    with ContainerManager(image_name=base_image, container_tool=container_tool) as cm:
+        logger.info("--- Preparing Container ---")
+        for entry in config.get("prepare", {}).get("copy_files", []):
+            src_path = Path(entry["src"])
+            if not src_path.exists():
+                logger.error(f"Source file for copy not found: {src_path}. Skipping this copy operation.")
+                continue
+            cm.copy_to(src_path, entry["dest"])
+
+        cm.start()
+
+        for cmd_str in config.get("prepare", {}).get("commands", []):
+            cm.execute_command(cmd_str)
+        logger.info("--- Container Preparation Complete ---")
+
+        with tempfile.TemporaryDirectory(prefix="env_diff_") as tmpdir_str:
+            tmpdir = Path(tmpdir_str)
+            logger.info(f"Using temporary directory: {tmpdir}")
+
+            base_fs_root = tmpdir / "fs_base"
+            after_fs_root = tmpdir / "fs_after"
+            base_cmd_output_dir = tmpdir / "cmd_outputs_base"
+            after_cmd_output_dir = tmpdir / "cmd_outputs_after"
+
+            for d_path in [base_fs_root, after_fs_root, base_cmd_output_dir, after_cmd_output_dir]:
+                d_path.mkdir(parents=True, exist_ok=True)
+
+            target_dirs = config.get("target_dirs", [])
+            if not target_dirs:
+                logger.warning("'target_dirs' not specified in config. File system diffs might be empty or limited.")
+
+            logger.info("--- Capturing Baseline State ---")
+            if target_dirs:
+                cm.export_paths(target_dirs, base_fs_root)
+            for entry in config.get("command_diff", []):
+                outfile_name = Path(entry["outfile"]).name
+                cm.capture_command_output(entry["command"], base_cmd_output_dir / outfile_name)
+            logger.info("--- Baseline State Captured ---")
+
+            logger.info("--- Executing Main Operation ---")
+            main_op_commands = config.get("main_operation", {}).get("commands", [])
+            for cmd_str in main_op_commands:
+                cmd_result = cm.execute_command(cmd_str)
+                output_data["main_operation_results"].append(cmd_result)
+            logger.info("--- Main Operation Complete ---")
+
+            logger.info("--- Capturing State After Main Operation ---")
+            if target_dirs:
+                cm.export_paths(target_dirs, after_fs_root)
+            for entry in config.get("command_diff", []):
+                outfile_name = Path(entry["outfile"]).name
+                cm.capture_command_output(entry["command"], after_cmd_output_dir / outfile_name)
+            logger.info("--- State After Main Operation Captured ---")
+
+            logger.info("--- Generating Diff Reports ---")
+            exclude_paths = config.get("exclude_paths", [])
+
+            if target_dirs:
+                fs_diff_rq_content = generate_diff_report(base_fs_root, after_fs_root, "rq", exclude_paths)
+                output_data["diff_reports"]["filesystem_rq"] = list(filter(None, fs_diff_rq_content.split("\n")))
+
+                fs_diff_urn_content = generate_diff_report(base_fs_root, after_fs_root, "urN", exclude_paths)
+                output_data["diff_reports"]["filesystem_urN"] = list(
+                    filter(None, re.split(r"(?=^[a-zA-Z].+$)", fs_diff_urn_content, flags=re.MULTILINE))
+                )
+            else:
+                logger.info("Skipping filesystem diffs as 'target_dirs' was empty.")
+                output_data["diff_reports"]["filesystem_rq"] = [
+                    "Skipped: 'target_dirs' was not specified or empty in config."
+                ]
+                output_data["diff_reports"]["filesystem_urN"] = [
+                    "Skipped: 'target_dirs' was not specified or empty in config."
+                ]
+
+            for entry in config.get("command_diff", []):
+                outfile_name = Path(entry["outfile"]).name
+                base_cmd_file = base_cmd_output_dir / outfile_name
+                after_cmd_file = after_cmd_output_dir / outfile_name
+
+                command_diff_entry = {
+                    "command": entry["command"],
+                    "diff_file": entry["outfile"],
+                    "diff_content": None,
+                }
+                if base_cmd_file.exists() and after_cmd_file.exists():
+                    cmd_diff_content = generate_diff_report(base_cmd_file, after_cmd_file, "text")
+                    command_diff_entry["diff_content"] = cmd_diff_content
+                else:
+                    missing_files_info = []
+                    if not base_cmd_file.exists():
+                        missing_files_info.append(f"baseline output '{base_cmd_file}'")
+                    if not after_cmd_file.exists():
+                        missing_files_info.append(f"after output '{after_cmd_file}'")
+                    logger.warning(
+                        f"Skipping diff for command '{entry['command']}' due to missing output files: {', '.join(missing_files_info)}"
+                    )
+                    command_diff_entry["diff_content"] = (
+                        f"Skipped: Output file(s) not found ({', '.join(missing_files_info)})."
+                    )
+                output_data["diff_reports"]["command_outputs"].append(command_diff_entry)
+
+            logger.info("--- Diff Report Generation Complete ---")
+
+    logger.info(f"Writing final JSON report to '{output_report_path}'...")
+    output_report_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_report_path, "w", encoding="utf-8") as f_report:
+        json.dump(output_data, f_report, indent=4, ensure_ascii=False)
+    logger.info(f"✅ Environment diff report successfully generated: {output_report_path.resolve()}")

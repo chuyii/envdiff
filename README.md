@@ -13,7 +13,7 @@
 2. Run the tool with:
 
 ```bash
-python main.py --input example-input.yaml --output output.json
+python -m envdiff.cli --input example-input.yaml --output output.json
 ```
 
 By default `podman` is used. To use Docker instead, pass `--container-tool docker`.
