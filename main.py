@@ -3,7 +3,7 @@ import subprocess
 import tempfile
 import shutil
 import yaml
-import json  # Added to handle JSON
+import json
 from pathlib import Path
 from datetime import datetime
 import argparse
@@ -11,9 +11,6 @@ import time
 import logging
 import re
 
-# === Logger Setup ===
-# Configure logging to provide informative output.
-# The log level can be adjusted (e.g., to logging.DEBUG for more verbose output).
 logging.basicConfig(
     level=logging.INFO,
     format='[%(levelname)s] %(asctime)s - %(name)s - %(message)s',
@@ -21,8 +18,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# === Configuration ===
-DEFAULT_CONTAINER_TOOL = "podman"  # Default container utility (can be "docker")
+DEFAULT_CONTAINER_TOOL = "podman"
 
 class ContainerManager:
     """
@@ -62,19 +58,16 @@ class ContainerManager:
         cmd_str = ' '.join(cmd_list) if isinstance(cmd_list, list) else cmd_list
         logger.debug(f"Executing command: {cmd_str}")
         try:
-            # Ensure text=True for string output
             kwargs.setdefault('text', True)
-            # Capture stdout and stderr
             result = subprocess.run(cmd_list, shell=shell, check=check, capture_output=True, **kwargs)
             if result.stdout:
                 logger.debug(f"Stdout: {result.stdout.strip()}")
             if result.stderr:
-                # Log stderr at DEBUG level as it might be present even on success for informational purposes
                 logger.debug(f"Stderr: {result.stderr.strip()}")
             return result
         except subprocess.CalledProcessError as e:
             logger.error(f"Command failed with exit code {e.returncode}: {cmd_str}")
-            if e.stdout: # stdout and stderr are also part of the CompletedProcess object e
+            if e.stdout:
                 logger.error(f"Failed command stdout: {e.stdout.strip()}")
             if e.stderr:
                 logger.error(f"Failed command stderr: {e.stderr.strip()}")
@@ -90,7 +83,7 @@ class ContainerManager:
             logger.warning(f"Container {self.container_id} already exists. Skipping creation.")
             return
         cmd = [self.container_tool, "create", "-ti", self.image_name, "tail", "-f", "/dev/null"]
-        result = self._run_command(cmd) # capture_output=True is handled by default in _run_command
+        result = self._run_command(cmd)
         self.container_id = result.stdout.strip()
         logger.info(f"Container {self.container_id} created from image '{self.image_name}'.")
 
@@ -106,12 +99,11 @@ class ContainerManager:
         for _ in range(timeout):
             try:
                 inspect_cmd = [self.container_tool, "inspect", "-f", "{{.State.Running}}", self.container_id]
-                result = self._run_command(inspect_cmd, check=False) # check=False as it might not be running yet
+                result = self._run_command(inspect_cmd, check=False)
                 if result.returncode == 0 and result.stdout.strip() == "true":
                     logger.info(f"Container {self.container_id} is now running.")
                     return
             except subprocess.CalledProcessError as e:
-                # This can happen if container is in an error state or removed abruptly
                 logger.warning(f"Error inspecting container {self.container_id} while waiting for start: {e.stderr}")
             time.sleep(1)
         raise RuntimeError(f"Container {self.container_id} did not reach running state within {timeout} seconds.")
@@ -125,10 +117,9 @@ class ContainerManager:
         # Podman uses --time, Docker uses -t for stop timeout
         stop_flag = "--time" if self.container_tool == "podman" else "-t"
         try:
-            self._run_command([self.container_tool, "stop", stop_flag, str(timeout), self.container_id], check=False) # Don't fail if already stopped
+            self._run_command([self.container_tool, "stop", stop_flag, str(timeout), self.container_id], check=False)
             logger.info(f"Container {self.container_id} stop command issued.")
         except subprocess.CalledProcessError as e:
-            # Log error but don't re-raise, as we want to proceed to rm
             logger.error(f"Error stopping container {self.container_id}: {e.stderr}")
 
 
@@ -143,12 +134,12 @@ class ContainerManager:
             cmd.append("-f")
         cmd.append(self.container_id)
         try:
-            self._run_command(cmd, check=False) # Don't fail if already removed or minor issues
+            self._run_command(cmd, check=False)
             logger.info(f"Container {self.container_id} removed.")
         except subprocess.CalledProcessError as e:
             logger.error(f"Error removing container {self.container_id}: {e.stderr}")
         finally:
-            self.container_id = None # Clear ID after attempting removal
+            self.container_id = None
 
     def copy_to(self, src_path: Path, dest_in_container: str):
         """Copies files/directories from the host to the container."""
@@ -179,20 +170,18 @@ class ContainerManager:
         full_cmd_str = " ".join(cmd)
         logger.info(f"Executing in container {self.container_id}: {full_cmd_str}")
 
-        # Set check=False to return results even if the command fails, instead of raising an error
         result = self._run_command(cmd, shell=False, check=False)
 
         if result.returncode == 0:
             logger.info(f"Successfully executed in container: {command}")
         else:
             logger.warning(f"Command in container exited with code {result.returncode}: {command}")
-            # Also include stdout and stderr in the warning log
             if result.stdout.strip():
                 logger.warning(f"  Stdout: {result.stdout.strip()}")
             if result.stderr.strip():
                 logger.warning(f"  Stderr: {result.stderr.strip()}")
 
-        return { # Return the command execution results as a dictionary
+        return {
             "command": command,
             "stdout": result.stdout.strip(),
             "stderr": result.stderr.strip(),
@@ -214,10 +203,8 @@ class ContainerManager:
         target_paths_str = " ".join(cleaned_target_paths)
 
         logger.info(f"Exporting '{target_paths_str}' from {self.container_id} to '{host_output_dir}'...")
-        # Using shell=True due to the pipe and tar command structure
         cmd_str = f"{self.container_tool} export {self.container_id} | tar -x -C \"{str(host_output_dir)}\" {target_paths_str}"
         self._run_command(cmd_str, shell=True)
-        # Grant read-write-execute permissions to the exported files (keep check=True)
         self._run_command(f"chmod -R u+rwx \"{str(host_output_dir)}\"", shell=True)
         logger.info(f"Successfully exported paths to '{host_output_dir}'.")
 
@@ -229,7 +216,7 @@ class ContainerManager:
         logger.info(f"Capturing output of '{command}' from {self.container_id} to '{host_outfile}'...")
         escaped_command = command.replace('"', r'\"')
         full_cmd_str = f"{self.container_tool} exec {self.container_id} bash -c \"{escaped_command}\""
-        result = self._run_command(full_cmd_str, shell=True, check=False) # check=False to get output even on error
+        result = self._run_command(full_cmd_str, shell=True, check=False)
 
         host_outfile.parent.mkdir(parents=True, exist_ok=True)
         with open(host_outfile, "w", encoding="utf-8") as f:
@@ -248,11 +235,11 @@ class ContainerManager:
         """Context manager exit: stops and removes the container."""
         logger.info(f"Cleaning up container {self.container_id}...")
         try:
-            if self.container_id: # Check if ID exists (e.g. creation failed)
-                self.stop(timeout=0) # Quick stop
+            if self.container_id:
+                self.stop(timeout=0)
         except Exception as e:
             logger.error(f"Exception during container stop in __exit__: {e}", exc_info=False)
-        finally: # Ensure remove is attempted even if stop fails
+        finally:
             if self.container_id:
                 try:
                     self.remove(force=True)
@@ -275,10 +262,9 @@ def load_config(config_path: Path) -> dict:
 def generate_diff_report(
     base_path: Path,
     after_path: Path,
-    # output_file: Path, # This function returns content, doesn't write to a file directly
     diff_type: str,
     exclude_paths: list[str] = None
-) -> str: # Changed to return diff content as a string
+) -> str:
     """
     Generates a diff report between two directories or files.
 
@@ -294,66 +280,48 @@ def generate_diff_report(
     if exclude_paths is None:
         exclude_paths = []
 
-    exclude_args_str = "|".join(exclude_paths) if exclude_paths else "EMPTY_EXCLUDE_LIST_PLACEHOLDER" # Avoid empty grep pattern
+    exclude_args_str = "|".join(exclude_paths) if exclude_paths else "EMPTY_EXCLUDE_LIST_PLACEHOLDER"
 
     cmd_str = None
     base_name = base_path.name
     after_name = after_path.name
-    # All diff commands should be run from the parent of base_path/after_path for consistent relative paths
-    # For file diffs (text), it's parent of parent
+    # All diff commands are executed from the parent directory for consistent paths
 
     if diff_type == "rq":
-        # Diff command for directory comparison, reporting only differing files/dirs
-        # LANG=C diff -rq base_dir after_dir | grep -Ev '^[^ ]* ([^ ]* )?[^ /]*(exclude1|exclude2)'
-        # The grep part filters out lines matching excluded paths.
         diff_command_part = f"LANG=C diff -rq \"{base_name}\" \"{after_name}\""
         if exclude_paths: # Only add grep if there are exclusions
              diff_command_part += f" | grep -Ev '^[^ ]* ([^ ]* )?[^ /]*({exclude_args_str})'"
         cmd_str = f"cd \"{base_path.parent}\" && {diff_command_part}"
 
     elif diff_type == "urN":
-        # Diff command for directory comparison, unified recursive format, treating new files as empty
-        # LANG=C diff -urN base_dir after_dir | awk ... | sed ...
-        # The awk and sed parts are complex filters from the original script to format the output.
         awk_script = "'/^[a-zA-Z]/{if(n){if(h!~p){for(i=0;i<c;i++)print a[i];}delete a};c=0;h=$0;n=1}n{a[c++]=$0}END{if(n&&h!~p){for(i=0;i<c;i++)print a[i]}}'"
-        sed_script = r"'/^\(---\|+++\) /s/\t.*//'" # Removes timestamps from ---/+++ lines
+        sed_script = r"'/^\(---\|+++\) /s/\t.*//'"
         diff_command_part = f"LANG=C diff -urN \"{base_name}\" \"{after_name}\""
-        if exclude_paths: # awk script needs the exclude pattern
+        if exclude_paths:
             diff_command_part += f" | awk -v p='^[^ ]* [^ ]* [^ /]*({exclude_args_str})' {awk_script}"
-        else: # If no excludes, awk doesn't need -v p, and the h!~p check becomes simpler or removed
-             # Simpler awk if no excludes: just print all diff blocks
-             simplified_awk = "'/^[a-zA-Z]/{if(n){for(i=0;i<c;i++)print a[i];delete a};c=0;h=$0;n=1}n{a[c++]=$0}END{if(n){for(i=0;i<c;i++)print a[i]}}'"
-             diff_command_part += f" | awk {simplified_awk}"
+        else:
+            simplified_awk = "'/^[a-zA-Z]/{if(n){for(i=0;i<c;i++)print a[i];delete a};c=0;h=$0;n=1}n{a[c++]=$0}END{if(n){for(i=0;i<c;i++)print a[i]}}'"
+            diff_command_part += f" | awk {simplified_awk}"
         diff_command_part += f" | sed -e {sed_script}"
         cmd_str = f"cd \"{base_path.parent}\" && {diff_command_part}"
 
     elif diff_type == "text":
-        # Diff command for comparing two text files
-        # LANG=C diff -su base_parent/base_file after_parent/after_file | sed ...
-        # base_path and after_path are full paths to files here.
-        # The paths for diff command need to be relative to the cd target.
         base_relative_path = f"{base_path.parent.name}/{base_path.name}"
         after_relative_path = f"{after_path.parent.name}/{after_path.name}"
         sed_script = r"'/^\(---\|+++\) /s/\t.*//'"
         cmd_str = f"cd \"{base_path.parent.parent}\" && LANG=C diff -su \"{base_relative_path}\" \"{after_relative_path}\" | sed -e {sed_script}"
     else:
         logger.error(f"Unsupported diff type: {diff_type}")
-        return "" # Return empty string as diff content was changed to be returned
-
-    logger.info(f"Generating {diff_type} diff...") # Removed mention of temporary file
+        return ""
+    logger.info(f"Generating {diff_type} diff...")
     logger.debug(f"Diff command: {cmd_str}")
 
-    # Run the diff command
-    # Using subprocess directly as it's not a container command
     result = subprocess.run(cmd_str, shell=True, check=False, capture_output=True, text=True, encoding='utf-8')
 
-    # Don't write to file, return content instead
-    if result.returncode > 1: # diff returns 0 for no diffs, 1 for diffs, >1 for errors
+    if result.returncode > 1:
         logger.error(f"Diff command failed or encountered an issue. Exit code: {result.returncode}. Stderr: {result.stderr.strip()}")
-        # Consider whether to include error info in diff result or log separately
-        # Here, stdout is returned as is, and errors are warned in logs
     logger.info(f"Diff content for type '{diff_type}' generated.")
-    return result.stdout # Return the diff result string
+    return result.stdout
 
 
 def run_analysis(config_path: Path, output_report_path: Path, container_tool: str):
@@ -366,24 +334,21 @@ def run_analysis(config_path: Path, output_report_path: Path, container_tool: st
         logger.error("Configuration error: 'base_image' not specified in input YAML.")
         raise ValueError("'base_image' must be defined in the configuration.")
 
-    # Root dictionary for JSON output
     output_data = {
         "report_metadata": {
             "generated_on": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             "container_tool": container_tool
         },
-        "definitions": config, # The loaded YAML content (as a Python dict)
-        "main_operation_results": [], # List to store results of main_operation commands
+        "definitions": config,
+        "main_operation_results": [],
         "diff_reports": {
             "filesystem_rq": None,
             "filesystem_urN": None,
-            "command_outputs": [] # List to store results of command_diff
+            "command_outputs": []
         }
-        # Other keys like execution_log or errors could also be added if needed
     }
 
     with ContainerManager(image_name=base_image, container_tool=container_tool) as cm:
-        # 1. Prepare container (copy files, run setup commands)
         logger.info("--- Preparing Container ---")
         for entry in config.get('prepare', {}).get('copy_files', []):
             src_path = Path(entry['src'])
@@ -392,10 +357,9 @@ def run_analysis(config_path: Path, output_report_path: Path, container_tool: st
                 continue
             cm.copy_to(src_path, entry['dest'])
 
-        cm.start() # Start container after initial files are copied
+        cm.start()
 
         for cmd_str in config.get('prepare', {}).get('commands', []):
-            # Results of commands in 'prepare' are not included in JSON for now (can be added if needed)
             cm.execute_command(cmd_str)
         logger.info("--- Container Preparation Complete ---")
 
@@ -415,25 +379,21 @@ def run_analysis(config_path: Path, output_report_path: Path, container_tool: st
             if not target_dirs:
                 logger.warning("'target_dirs' not specified in config. File system diffs might be empty or limited.")
 
-            # 2. Capture baseline state (filesystem and command outputs)
             logger.info("--- Capturing Baseline State ---")
             if target_dirs:
                 cm.export_paths(target_dirs, base_fs_root)
             for entry in config.get('command_diff', []):
-                outfile_name = Path(entry['outfile']).name # Use only filename for output dir
+                outfile_name = Path(entry['outfile']).name
                 cm.capture_command_output(entry['command'], base_cmd_output_dir / outfile_name)
             logger.info("--- Baseline State Captured ---")
 
-            # 3. Execute main operation(s)
             logger.info("--- Executing Main Operation ---")
             main_op_commands = config.get('main_operation', {}).get('commands', [])
             for cmd_str in main_op_commands:
-                # Collect execution results of main_operation commands
                 cmd_result = cm.execute_command(cmd_str)
                 output_data["main_operation_results"].append(cmd_result)
             logger.info("--- Main Operation Complete ---")
 
-            # 4. Capture state after main operation
             logger.info("--- Capturing State After Main Operation ---")
             if target_dirs:
                 cm.export_paths(target_dirs, after_fs_root)
@@ -442,13 +402,10 @@ def run_analysis(config_path: Path, output_report_path: Path, container_tool: st
                 cm.capture_command_output(entry['command'], after_cmd_output_dir / outfile_name)
             logger.info("--- State After Main Operation Captured ---")
 
-            # 5. Generate diff reports
             logger.info("--- Generating Diff Reports ---")
             exclude_paths = config.get('exclude_paths', [])
 
-            # Filesystem diffs
-            if target_dirs: # Only run FS diffs if target_dirs were specified and exported
-                # generate_diff_report returns the diff content as a string
+            if target_dirs:
                 fs_diff_rq_content = generate_diff_report(base_fs_root, after_fs_root, "rq", exclude_paths)
                 output_data["diff_reports"]["filesystem_rq"] = list(filter(None, fs_diff_rq_content.split('\n')))
 
@@ -460,7 +417,6 @@ def run_analysis(config_path: Path, output_report_path: Path, container_tool: st
                 output_data["diff_reports"]["filesystem_urN"] = ["Skipped: 'target_dirs' was not specified or empty in config."]
 
 
-            # Command output diffs
             for entry in config.get('command_diff', []):
                 outfile_name = Path(entry['outfile']).name
                 base_cmd_file = base_cmd_output_dir / outfile_name
@@ -480,12 +436,10 @@ def run_analysis(config_path: Path, output_report_path: Path, container_tool: st
 
             logger.info("--- Diff Report Generation Complete ---")
 
-    # 6. Write final JSON report
     logger.info(f"Writing final JSON report to '{output_report_path}'...")
     output_report_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_report_path, "w", encoding='utf-8') as f_report:
-        # Write out in JSON format
-        json.dump(output_data, f_report, indent=4, ensure_ascii=False) # ensure_ascii=False to output non-ASCII characters as is
+        json.dump(output_data, f_report, indent=4, ensure_ascii=False)
     logger.info(f"✅ Environment diff report successfully generated: {output_report_path.resolve()}")
 
 
@@ -503,7 +457,7 @@ def main():
     )
     parser.add_argument(
         "--output",
-        default="output.json", # Changed default output filename to .json
+        default="output.json",
         type=Path,
         help="Path to save the generated JSON report."
     )
@@ -522,17 +476,17 @@ def main():
     args = parser.parse_args()
 
     if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG) # Set root logger to DEBUG
-        for handler in logging.getLogger().handlers: # Also set handlers
+        logging.getLogger().setLevel(logging.DEBUG)
+        for handler in logging.getLogger().handlers:
             handler.setLevel(logging.DEBUG)
         logger.debug("Verbose logging enabled.")
 
 
     try:
         run_analysis(args.input, args.output, args.container_tool)
-    except FileNotFoundError as e: # Specifically for config file or critical tools
+    except FileNotFoundError as e:
         logger.critical(f"A critical file was not found: {e}")
-        print(f"Error: {e}. Please check file paths and prerequisites.") # Also print to console for visibility
+        print(f"Error: {e}. Please check file paths and prerequisites.")
     except subprocess.CalledProcessError as e:
         logger.critical(f"A critical command failed during execution: {e}")
         print(f"Error: A critical command failed. Check logs for details: {e}")
