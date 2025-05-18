@@ -1,0 +1,90 @@
+{
+    "report_metadata": {
+        "generated_on": "2025-05-18 23:02:58",
+        "container_tool": "podman"
+    },
+    "definitions": {
+        "base_image": "quay.io/almalinuxorg/9-base:9.5",
+        "prepare": {
+            "copy_files": [
+                {
+                    "src": "./input.yaml",
+                    "dest": "/root/input.yaml"
+                }
+            ],
+            "commands": [
+                "echo \"initial setup\" > /root/init",
+                "echo tmp > /tmp/test"
+            ]
+        },
+        "main_operation": {
+            "commands": [
+                "echo test >> /root/input.yaml",
+                "mkdir /root/test",
+                "echo test > /root/test/tmp",
+                "dnf -y install tigervnc-license"
+            ]
+        },
+        "target_dirs": [
+            "/etc",
+            "/var",
+            "/root",
+            "/tmp"
+        ],
+        "exclude_paths": [
+            "/var/cache/dnf",
+            "/var/lib/dnf",
+            "/var/lib/rpm",
+            "/var/log"
+        ],
+        "command_diff": [
+            {
+                "command": "rpm -qa | sort",
+                "outfile": "pkglist.txt"
+            }
+        ]
+    },
+    "main_operation_results": [
+        {
+            "command": "echo test >> /root/input.yaml",
+            "stdout": "",
+            "stderr": "",
+            "return_code": 0
+        },
+        {
+            "command": "mkdir /root/test",
+            "stdout": "",
+            "stderr": "",
+            "return_code": 0
+        },
+        {
+            "command": "echo test > /root/test/tmp",
+            "stdout": "",
+            "stderr": "",
+            "return_code": 0
+        },
+        {
+            "command": "dnf -y install tigervnc-license",
+            "stdout": "AlmaLinux 9 - AppStream                         7.3 MB/s |  17 MB     00:02    \nAlmaLinux 9 - BaseOS                            7.5 MB/s |  21 MB     00:02    \nAlmaLinux 9 - Extras                             20 kB/s |  13 kB     00:00    \nDependencies resolved.\n================================================================================\n Package               Arch        Version                 Repository      Size\n================================================================================\nInstalling:\n tigervnc-license      noarch      1.14.1-1.el9_5.1        appstream       17 k\n\nTransaction Summary\n================================================================================\nInstall  1 Package\n\nTotal download size: 17 k\nInstalled size: 18 k\nDownloading Packages:\ntigervnc-license-1.14.1-1.el9_5.1.noarch.rpm    454 kB/s |  17 kB     00:00    \n--------------------------------------------------------------------------------\nTotal                                            26 kB/s |  17 kB     00:00     \nRunning transaction check\nTransaction check succeeded.\nRunning transaction test\nTransaction test succeeded.\nRunning transaction\n  Preparing        :                                                        1/1 \n  Installing       : tigervnc-license-1.14.1-1.el9_5.1.noarch               1/1 \n  Verifying        : tigervnc-license-1.14.1-1.el9_5.1.noarch               1/1 \n\nInstalled:\n  tigervnc-license-1.14.1-1.el9_5.1.noarch                                      \n\nComplete!",
+            "stderr": "",
+            "return_code": 0
+        }
+    ],
+    "diff_reports": {
+        "filesystem_rq": [
+            "Only in fs_after/root: input.yaml",
+            "Only in fs_after/root: test"
+        ],
+        "filesystem_urN": [
+            "diff -urN fs_base/root/input.yaml fs_after/root/input.yaml\n--- fs_base/root/input.yaml\n+++ fs_after/root/input.yaml\n@@ -0,0 +1 @@\n+test\n",
+            "diff -urN fs_base/root/test/tmp fs_after/root/test/tmp\n--- fs_base/root/test/tmp\n+++ fs_after/root/test/tmp\n@@ -0,0 +1 @@\n+test\n"
+        ],
+        "command_outputs": [
+            {
+                "command": "rpm -qa | sort",
+                "diff_file": "pkglist.txt",
+                "diff_content": "--- cmd_outputs_base/pkglist.txt\n+++ cmd_outputs_after/pkglist.txt\n@@ -139,6 +139,7 @@\n systemd-pam-252-46.el9_5.3.alma.1.x86_64\n systemd-rpm-macros-252-46.el9_5.3.alma.1.noarch\n tar-1.34-7.el9.x86_64\n+tigervnc-license-1.14.1-1.el9_5.1.noarch\n tpm2-tss-3.2.3-1.el9.x86_64\n tzdata-2025b-1.el9.noarch\n usermode-1.114-5.el9.x86_64\n"
+            }
+        ]
+    }
+}
