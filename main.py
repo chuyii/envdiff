@@ -295,7 +295,7 @@ def generate_diff_report(
 
     elif diff_type == "urN":
         awk_script = "'/^[a-zA-Z]/{if(n){if(h!~p){for(i=0;i<c;i++)print a[i];}delete a};c=0;h=$0;n=1}n{a[c++]=$0}END{if(n&&h!~p){for(i=0;i<c;i++)print a[i]}}'"
-        sed_script = r"'/^(---|\+\+) /s/\t.*/'"
+        sed_script = r"'/^\(---\|+++\) /s/\t.*//'"
         diff_command_part = f"LANG=C diff -urN \"{base_name}\" \"{after_name}\""
         if exclude_paths:
             diff_command_part += f" | awk -v p='^[^ ]* [^ ]* [^ /]*({exclude_args_str})' {awk_script}"
