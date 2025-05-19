@@ -2,6 +2,7 @@ import subprocess
 import time
 import logging
 from pathlib import Path
+from typing import List
 
 DEFAULT_CONTAINER_TOOL = "podman"
 
@@ -144,7 +145,7 @@ class ContainerManager:
             "return_code": result.returncode,
         }
 
-    def export_paths(self, target_paths_in_container: list[str], host_output_dir: Path):
+    def export_paths(self, target_paths_in_container: List[str], host_output_dir: Path):
         """Export specified paths from the container to the host."""
         if not self.container_id:
             raise RuntimeError("Container not available for export operation.")
