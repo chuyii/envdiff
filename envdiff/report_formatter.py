@@ -22,7 +22,17 @@ def json_report_to_text(report_path: Path) -> str:
     definitions = data.get("definitions", {})
     if definitions:
         lines.append("Definitions:")
-        for key, value in definitions.items():
+        ordered_keys = [
+            "base_image",
+            "prepare",
+            "target_dirs",
+            "exclude_paths",
+            "omit_diff_paths",
+        ]
+        keys = [k for k in ordered_keys if k in definitions]
+        keys.extend(k for k in definitions if k not in keys)
+        for key in keys:
+            value = definitions[key]
             if key == "command_diff":
                 continue
             if key == "main_operation" and isinstance(value, dict):

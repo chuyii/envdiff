@@ -54,3 +54,32 @@ def test_json_report_to_text(tmp_path: Path):
     assert "  - Only in after: new.txt" in text
     assert "command_diff" not in text
 
+
+def test_definitions_order(tmp_path: Path):
+    data = {
+        "report_metadata": {},
+        "definitions": {
+            "omit_diff_paths": ["c"],
+            "target_dirs": ["/a"],
+            "prepare": {"commands": ["setup"]},
+            "exclude_paths": ["/b"],
+            "base_image": "alpine:latest",
+        },
+        "main_operation_results": [],
+        "diff_reports": {},
+    }
+    report = tmp_path / "report.json"
+    with open(report, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+
+    text = json_report_to_text(report)
+
+    lines = text.splitlines()
+    base_i = lines.index("- base_image:")
+    prepare_i = lines.index("- prepare:")
+    target_i = lines.index("- target_dirs:")
+    exclude_i = lines.index("- exclude_paths:")
+    omit_i = lines.index("- omit_diff_paths:")
+
+    assert base_i < prepare_i < target_i < exclude_i < omit_i
+
