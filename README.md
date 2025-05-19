@@ -31,6 +31,8 @@ By default `podman` is used. To use Docker instead, pass `--container-tool docke
 The resulting report is written to `output.json`. An example output is included in `example-output.json`.
 ### Input YAML structure
 The configuration file uses these keys:
+- `extends`: list of additional YAML files to load before this file. Lists are
+  concatenated while other keys are overwritten by later files.
 - `base_image` (required): container image to analyze.
 - `prepare.copy_files`: list of `{src, dest}` pairs copied into the container before running any commands.
 - `prepare.commands`: commands executed before capturing the baseline state.

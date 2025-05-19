@@ -12,16 +12,50 @@ import yaml
 logger = logging.getLogger(__name__)
 
 
+def _merge_dicts(base: dict, new: dict) -> dict:
+    """Merge ``new`` into ``base`` following custom rules."""
+    for key, value in new.items():
+        if isinstance(value, list):
+            existing = base.get(key)
+            if isinstance(existing, list):
+                base[key] = existing + value
+            else:
+                base[key] = list(value)
+        elif isinstance(value, dict):
+            if isinstance(base.get(key), dict):
+                base[key] = _merge_dicts(base[key], value)
+            else:
+                base[key] = _merge_dicts({}, value)
+        else:
+            base[key] = value
+    return base
+
+
 def load_config(config_path: Path) -> dict:
-    """Load YAML configuration from the given path."""
+    """Load YAML configuration from the given path, processing ``extends``."""
     logger.info(f"Loading configuration from '{config_path}'...")
     if not config_path.is_file():
         logger.error(f"Configuration file not found: {config_path}")
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
     with open(config_path, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
+        config = yaml.safe_load(f) or {}
+
+    combined: dict = {}
+    extends_list = config.get("extends", [])
+    if isinstance(extends_list, str):
+        extends_list = [extends_list]
+
+    for ext in extends_list:
+        ext_path = Path(ext)
+        if not ext_path.is_absolute():
+            ext_path = config_path.parent / ext_path
+        extended_cfg = load_config(ext_path)
+        combined = _merge_dicts(combined, extended_cfg)
+
+    config.pop("extends", None)
+    combined = _merge_dicts(combined, config)
     logger.info("Configuration loaded successfully.")
-    return config
+    return combined
 
 
 def run_analysis(config_path: Path, output_report_path: Path, container_tool: str):
