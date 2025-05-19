@@ -22,7 +22,7 @@ exclude_paths:
   - /var/lib/rpm
   - /var/log
 omit_diff_paths:
-  - /var/log/dnf.log
+  - /root/input.yaml
 
 command_diff:
   - command: "rpm -qa | sort"
