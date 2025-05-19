@@ -29,6 +29,33 @@ def test_generate_diff_rq_and_urn():
         assert "diff -urN base/new.txt after/new.txt" in urn_output
 
 
+def test_generate_diff_urn_with_omitted_paths():
+    """Ensure diff details are omitted for specified paths."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        base_dir = Path(tmpdir) / "base"
+        after_dir = Path(tmpdir) / "after"
+        base_dir.mkdir()
+        after_dir.mkdir()
+
+        (base_dir / "skip.txt").write_text("foo\n", encoding="utf-8")
+        (after_dir / "skip.txt").write_text("bar\n", encoding="utf-8")
+        (base_dir / "keep.txt").write_text("foo\n", encoding="utf-8")
+        (after_dir / "keep.txt").write_text("bar\n", encoding="utf-8")
+
+        output = generate_diff_report(
+            base_dir, after_dir, "urN", omit_diff_paths=["skip.txt"]
+        )
+
+        assert "diff -urN base/skip.txt after/skip.txt (omitted)" in output
+        assert "diff -urN base/keep.txt after/keep.txt" in output
+        # ensure details for skip.txt are not included
+        assert "--- base/skip.txt" not in output
+        assert "+++ after/skip.txt" not in output
+        # ensure details for keep.txt remain
+        assert "--- base/keep.txt" in output
+        assert "+++ after/keep.txt" in output
+
+
 def test_generate_text_diff():
     """Ensure textual diff is produced for single files."""
     with tempfile.TemporaryDirectory() as tmpdir:
