@@ -1,6 +1,6 @@
 {
     "report_metadata": {
-        "generated_on": "2025-05-18 23:02:58",
+        "generated_on": "2025-05-19 23:12:00",
         "container_tool": "podman"
     },
     "definitions": {
@@ -37,6 +37,9 @@
             "/var/lib/rpm",
             "/var/log"
         ],
+        "omit_diff_paths": [
+            "/root/input.yaml"
+        ],
         "command_diff": [
             {
                 "command": "rpm -qa | sort",
@@ -65,7 +68,7 @@
         },
         {
             "command": "dnf -y install tigervnc-license",
-            "stdout": "AlmaLinux 9 - AppStream                         7.3 MB/s |  17 MB     00:02    \nAlmaLinux 9 - BaseOS                            7.5 MB/s |  21 MB     00:02    \nAlmaLinux 9 - Extras                             20 kB/s |  13 kB     00:00    \nDependencies resolved.\n================================================================================\n Package               Arch        Version                 Repository      Size\n================================================================================\nInstalling:\n tigervnc-license      noarch      1.14.1-1.el9_5.1        appstream       17 k\n\nTransaction Summary\n================================================================================\nInstall  1 Package\n\nTotal download size: 17 k\nInstalled size: 18 k\nDownloading Packages:\ntigervnc-license-1.14.1-1.el9_5.1.noarch.rpm    454 kB/s |  17 kB     00:00    \n--------------------------------------------------------------------------------\nTotal                                            26 kB/s |  17 kB     00:00     \nRunning transaction check\nTransaction check succeeded.\nRunning transaction test\nTransaction test succeeded.\nRunning transaction\n  Preparing        :                                                        1/1 \n  Installing       : tigervnc-license-1.14.1-1.el9_5.1.noarch               1/1 \n  Verifying        : tigervnc-license-1.14.1-1.el9_5.1.noarch               1/1 \n\nInstalled:\n  tigervnc-license-1.14.1-1.el9_5.1.noarch                                      \n\nComplete!",
+            "stdout": "AlmaLinux 9 - AppStream                         7.3 MB/s |  17 MB     00:02    \nAlmaLinux 9 - BaseOS                            7.9 MB/s |  21 MB     00:02    \nAlmaLinux 9 - Extras                             20 kB/s |  13 kB     00:00    \nDependencies resolved.\n================================================================================\n Package               Arch        Version                 Repository      Size\n================================================================================\nInstalling:\n tigervnc-license      noarch      1.14.1-1.el9_5.1        appstream       17 k\n\nTransaction Summary\n================================================================================\nInstall  1 Package\n\nTotal download size: 17 k\nInstalled size: 18 k\nDownloading Packages:\ntigervnc-license-1.14.1-1.el9_5.1.noarch.rpm    500 kB/s |  17 kB     00:00    \n--------------------------------------------------------------------------------\nTotal                                            25 kB/s |  17 kB     00:00     \nRunning transaction check\nTransaction check succeeded.\nRunning transaction test\nTransaction test succeeded.\nRunning transaction\n  Preparing        :                                                        1/1 \n  Installing       : tigervnc-license-1.14.1-1.el9_5.1.noarch               1/1 \n  Verifying        : tigervnc-license-1.14.1-1.el9_5.1.noarch               1/1 \n\nInstalled:\n  tigervnc-license-1.14.1-1.el9_5.1.noarch                                      \n\nComplete!",
             "stderr": "",
             "return_code": 0
         }
@@ -76,8 +79,8 @@
             "Only in fs_after/root: test"
         ],
         "filesystem_urN": [
-            "diff -urN fs_base/root/input.yaml fs_after/root/input.yaml\n--- fs_base/root/input.yaml\n+++ fs_after/root/input.yaml\n@@ -0,0 +1 @@\n+test\n",
-            "diff -urN fs_base/root/test/tmp fs_after/root/test/tmp\n--- fs_base/root/test/tmp\n+++ fs_after/root/test/tmp\n@@ -0,0 +1 @@\n+test\n"
+            "diff -urN fs_base/root/input.yaml fs_after/root/input.yaml (omitted)\n",
+            "diff -urN fs_base/root/test/tmp fs_after/root/test/tmp\n--- fs_base/root/test/tmp\n+++ fs_after/root/test/tmp\n@@ -0,0 +1 @@\n+test"
         ],
         "command_outputs": [
             {

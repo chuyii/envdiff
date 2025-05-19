@@ -12,6 +12,7 @@ def test_json_report_to_text(tmp_path: Path):
             "base_image": "alpine:latest",
             "prepare": {"commands": ["setup"]},
             "main_operation": {"commands": ["echo hi"]},
+            "omit_diff_paths": ["c"],
             "command_diff": [
                 {"command": "ls", "outfile": "ls.txt"}
             ],
@@ -45,6 +46,8 @@ def test_json_report_to_text(tmp_path: Path):
     assert "- prepare:" in text
     assert "  commands:" in text
     assert "    - setup" in text
+    assert "- omit_diff_paths:" in text
+    assert "  - c" in text
     assert "Only in after: new.txt" in text
     assert "diff -urN a b" in text
     assert "Command diff for: ls" in text
