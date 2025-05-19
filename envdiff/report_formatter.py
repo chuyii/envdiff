@@ -29,12 +29,42 @@ def json_report_to_text(report_path: Path) -> str:
                 value = {k: v for k, v in value.items() if k != "commands"}
                 if not value:
                     continue
+
             lines.append(f"- {key}:")
-            if isinstance(value, (dict, list)):
-                value_str = json.dumps(value, indent=2, ensure_ascii=False)
-                lines.append(_indent_block(value_str, 2))
+
+            if key == "prepare" and isinstance(value, dict):
+                copy_files = value.get("copy_files", [])
+                if copy_files:
+                    lines.append("  copy_files:")
+                    for item in copy_files:
+                        if isinstance(item, dict):
+                            src = item.get("src", "")
+                            dest = item.get("dest", "")
+                            lines.append(f"    - {src} -> {dest}")
+                        else:
+                            lines.append(f"    - {item}")
+                commands = value.get("commands", [])
+                if commands:
+                    lines.append("  commands:")
+                    for cmd in commands:
+                        lines.append(f"    - {cmd}")
+                extra_keys = [k for k in value if k not in {"copy_files", "commands"}]
+                for k in extra_keys:
+                    val = value[k]
+                    if isinstance(val, (dict, list)):
+                        val_str = json.dumps(val, indent=2, ensure_ascii=False)
+                        lines.append(_indent_block(val_str, 2))
+                    else:
+                        lines.append(f"  {k}: {val}")
+            elif key in {"target_dirs", "exclude_paths"} and isinstance(value, list):
+                for item in value:
+                    lines.append(f"  - {item}")
             else:
-                lines.append(f"  {value}")
+                if isinstance(value, (dict, list)):
+                    value_str = json.dumps(value, indent=2, ensure_ascii=False)
+                    lines.append(_indent_block(value_str, 2))
+                else:
+                    lines.append(f"  {value}")
         lines.append("")
 
     lines.append("Main operation results:")
