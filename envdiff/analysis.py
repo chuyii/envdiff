@@ -31,6 +31,18 @@ def _merge_dicts(base: dict, new: dict) -> dict:
     return base
 
 
+def _resolve_relative_paths(config: dict, base_dir: Path) -> None:
+    """Resolve relative file paths inside ``config`` based on ``base_dir``."""
+    prepare = config.get("prepare")
+    if isinstance(prepare, dict):
+        copy_files = prepare.get("copy_files", [])
+        for entry in copy_files:
+            if isinstance(entry, dict) and "src" in entry:
+                src_path = Path(entry["src"])
+                if not src_path.is_absolute():
+                    entry["src"] = str((base_dir / src_path).resolve())
+
+
 def load_config(config_path: Path) -> dict:
     """Load YAML configuration from the given path, processing ``extends``."""
     logger.info(f"Loading configuration from '{config_path}'...")
@@ -39,6 +51,8 @@ def load_config(config_path: Path) -> dict:
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f) or {}
+
+    _resolve_relative_paths(config, config_path.parent)
 
     combined: dict = {}
     extends_list = config.get("extends", [])
@@ -49,6 +63,7 @@ def load_config(config_path: Path) -> dict:
         ext_path = Path(ext)
         if not ext_path.is_absolute():
             ext_path = config_path.parent / ext_path
+        ext_path = ext_path.resolve()
         extended_cfg = load_config(ext_path)
         combined = _merge_dicts(combined, extended_cfg)
 
