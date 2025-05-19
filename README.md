@@ -20,15 +20,19 @@ This will provide the `envdiff` command for running the tool.
 ## Usage
 
 1. Prepare a YAML configuration file. An example is provided in `example-input.yaml`. See the next section for available keys.
-2. Run the tool with:
+2. Run the tool:
 
 ```bash
 envdiff --input example-input.yaml
 ```
 
+The resulting report is written to `example-input.diff.json`. Use `--output` to specify a different path.
+
 By default `podman` is used. To use Docker instead, pass `--container-tool docker`.
 
-The resulting report is written to `example-input.diff.json`. An example output is included in `example-output.json`.
+Add `-v`/`--verbose` to enable debug logging.
+
+An example output file is included in `example-output.json`.
 ### Input YAML structure
 The configuration file uses these keys:
 - `extends`: list of additional YAML files to load before this file. Lists are
@@ -48,7 +52,7 @@ The configuration file uses these keys:
 Convert an existing JSON report to a plain text summary:
 
 ```bash
-python -m envdiff.cli --summarize output.json --text-output report.txt
+envdiff --summarize output.json --text-output report.txt
 ```
 
 If `--text-output` is omitted, the summary is printed to stdout.
