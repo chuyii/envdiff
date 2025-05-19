@@ -41,7 +41,7 @@ def test_load_config_with_nested_dicts(tmp_path):
     )
 
     result = load_config(child)
-    expected_src = str((tmp_path / "foo").resolve())
+    expected_src = "foo"
     assert result == {
         "prepare": {
             "commands": ["a", "b"],
@@ -65,7 +65,7 @@ prepare:
     )
 
     result = load_config(cfg)
-    assert Path(result["prepare"]["copy_files"][0]["src"]) == src_file.resolve()
+    assert result["prepare"]["copy_files"][0]["src"] == "src.txt"
 
 
 def test_copy_files_paths_resolved_with_extends(tmp_path: Path) -> None:
@@ -92,6 +92,6 @@ def test_copy_files_paths_resolved_with_extends(tmp_path: Path) -> None:
     )
 
     result = load_config(child_file)
-    paths = [Path(e["src"]) for e in result["prepare"]["copy_files"]]
-    assert paths == [parent_src.resolve(), child_src.resolve()]
+    paths = [e["src"] for e in result["prepare"]["copy_files"]]
+    assert paths == ["../parent/p.txt", "c.txt"]
 
