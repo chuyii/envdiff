@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import re
 import tempfile
 from datetime import datetime
@@ -31,8 +32,13 @@ def _merge_dicts(base: dict, new: dict) -> dict:
     return base
 
 
-def _resolve_relative_paths(config: dict, base_dir: Path) -> None:
-    """Resolve relative file paths inside ``config`` based on ``base_dir``."""
+def _resolve_relative_paths(config: dict, base_dir: Path, root_dir: Path) -> None:
+    """Resolve relative file paths inside ``config``.
+
+    Paths are resolved relative to ``base_dir`` but stored relative to
+    ``root_dir`` so that configuration values avoid leaking absolute host
+    paths.
+    """
     prepare = config.get("prepare")
     if isinstance(prepare, dict):
         copy_files = prepare.get("copy_files", [])
@@ -40,11 +46,18 @@ def _resolve_relative_paths(config: dict, base_dir: Path) -> None:
             if isinstance(entry, dict) and "src" in entry:
                 src_path = Path(entry["src"])
                 if not src_path.is_absolute():
-                    entry["src"] = str((base_dir / src_path).resolve())
+                    abs_path = (base_dir / src_path).resolve()
+                    entry["src"] = os.path.relpath(abs_path, root_dir)
 
 
-def load_config(config_path: Path) -> dict:
-    """Load YAML configuration from the given path, processing ``extends``."""
+def load_config(config_path: Path, *, _root_dir: Path | None = None) -> dict:
+    """Load YAML configuration from the given path, processing ``extends``.
+
+    ``_root_dir`` is used internally to keep track of the directory of the
+    original configuration file specified by the user. Relative paths in nested
+    configuration files are converted so that they remain relative to this root
+    directory.
+    """
     logger.info(f"Loading configuration from '{config_path}'...")
     if not config_path.is_file():
         logger.error(f"Configuration file not found: {config_path}")
@@ -52,7 +65,10 @@ def load_config(config_path: Path) -> dict:
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f) or {}
 
-    _resolve_relative_paths(config, config_path.parent)
+    if _root_dir is None:
+        _root_dir = config_path.parent
+
+    _resolve_relative_paths(config, config_path.parent, _root_dir)
 
     combined: dict = {}
     extends_list = config.get("extends", [])
@@ -64,7 +80,7 @@ def load_config(config_path: Path) -> dict:
         if not ext_path.is_absolute():
             ext_path = config_path.parent / ext_path
         ext_path = ext_path.resolve()
-        extended_cfg = load_config(ext_path)
+        extended_cfg = load_config(ext_path, _root_dir=_root_dir)
         combined = _merge_dicts(combined, extended_cfg)
 
     config.pop("extends", None)
@@ -76,6 +92,7 @@ def load_config(config_path: Path) -> dict:
 def run_analysis(config_path: Path, output_report_path: Path, container_tool: str):
     """Main analysis workflow."""
     config = load_config(config_path)
+    root_dir = config_path.parent
     base_image = config.get("base_image")
     if not base_image:
         logger.error("Configuration error: 'base_image' not specified in input YAML.")
@@ -99,6 +116,8 @@ def run_analysis(config_path: Path, output_report_path: Path, container_tool: st
         logger.info("--- Preparing Container ---")
         for entry in config.get("prepare", {}).get("copy_files", []):
             src_path = Path(entry["src"])
+            if not src_path.is_absolute():
+                src_path = (root_dir / src_path).resolve()
             if not src_path.exists():
                 logger.error(f"Source file for copy not found: {src_path}. Skipping this copy operation.")
                 continue

@@ -34,7 +34,7 @@ The configuration file uses these keys:
 - `extends`: list of additional YAML files to load before this file. Lists are
   concatenated while other keys are overwritten by later files.
 - `base_image` (required): container image to analyze.
-- `prepare.copy_files`: list of `{src, dest}` pairs copied into the container before running any commands.
+- `prepare.copy_files`: list of `{src, dest}` pairs copied into the container before running any commands. Relative `src` paths are interpreted relative to the configuration file passed via `--input`.
 - `prepare.commands`: commands executed before capturing the baseline state.
 - `main_operation.commands`: commands executed during the main operation under analysis.
 - `target_dirs`: directories inside the container to export and compare.
