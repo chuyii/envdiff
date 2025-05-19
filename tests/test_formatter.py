@@ -42,6 +42,9 @@ def test_json_report_to_text(tmp_path: Path):
     assert "Definitions:" in text
     assert "- base_image:" in text
     assert "alpine:latest" in text
+    assert "- prepare:" in text
+    assert "  commands:" in text
+    assert "    - setup" in text
     assert "Only in after: new.txt" in text
     assert "diff -urN a b" in text
     assert "Command diff for: ls" in text
