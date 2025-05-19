@@ -25,15 +25,13 @@ def main() -> None:
     )
     parser.add_argument(
         "--input",
-        default="input.yaml",
         type=Path,
         help="Path to the input YAML configuration file.",
     )
     parser.add_argument(
         "--output",
-        default="output.json",
         type=Path,
-        help="Path to save the generated JSON report.",
+        help="Path to save the generated JSON report. Defaults to INPUT with the '.diff.json' extension.",
     )
     parser.add_argument(
         "--container-tool",
@@ -64,6 +62,12 @@ def main() -> None:
         for handler in logging.getLogger().handlers:
             handler.setLevel(logging.DEBUG)
         logger.debug("Verbose logging enabled.")
+
+    if not args.summarize:
+        if args.input is None:
+            parser.error("--input is required unless --summarize is used")
+        if args.output is None:
+            args.output = args.input.with_suffix(".diff.json")
 
     try:
         if args.summarize:
