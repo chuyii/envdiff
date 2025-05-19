@@ -23,12 +23,12 @@ This will provide the `envdiff` command for running the tool.
 2. Run the tool with:
 
 ```bash
-envdiff --input example-input.yaml --output output.json
+envdiff --input example-input.yaml
 ```
 
 By default `podman` is used. To use Docker instead, pass `--container-tool docker`.
 
-The resulting report is written to `output.json`. An example output is included in `example-output.json`.
+The resulting report is written to `example-input.diff.json`. An example output is included in `example-output.json`.
 ### Input YAML structure
 The configuration file uses these keys:
 - `extends`: list of additional YAML files to load before this file. Lists are
