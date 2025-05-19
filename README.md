@@ -4,7 +4,7 @@
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.8+
 - Either `podman` or `docker` must be installed and accessible in `PATH`.
 
 ## Installation

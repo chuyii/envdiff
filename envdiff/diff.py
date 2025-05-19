@@ -1,6 +1,7 @@
 import subprocess
 import logging
 from pathlib import Path
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -9,7 +10,7 @@ def generate_diff_report(
     base_path: Path,
     after_path: Path,
     diff_type: str,
-    exclude_paths: list[str] | None = None,
+    exclude_paths: Optional[List[str]] = None,
 ) -> str:
     """Generate a diff report between two directories or files."""
     if exclude_paths is None:
