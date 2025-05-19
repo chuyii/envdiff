@@ -56,7 +56,7 @@ def json_report_to_text(report_path: Path) -> str:
                         lines.append(_indent_block(val_str, 2))
                     else:
                         lines.append(f"  {k}: {val}")
-            elif key in {"target_dirs", "exclude_paths"} and isinstance(value, list):
+            elif key in {"target_dirs", "exclude_paths", "omit_diff_paths"} and isinstance(value, list):
                 for item in value:
                     lines.append(f"  - {item}")
             else:

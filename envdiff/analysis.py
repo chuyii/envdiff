@@ -102,12 +102,21 @@ def run_analysis(config_path: Path, output_report_path: Path, container_tool: st
 
             logger.info("--- Generating Diff Reports ---")
             exclude_paths = config.get("exclude_paths", [])
+            omit_diff_paths = config.get("omit_diff_paths", [])
 
             if target_dirs:
-                fs_diff_rq_content = generate_diff_report(base_fs_root, after_fs_root, "rq", exclude_paths)
+                fs_diff_rq_content = generate_diff_report(
+                    base_fs_root, after_fs_root, "rq", exclude_paths
+                )
                 output_data["diff_reports"]["filesystem_rq"] = list(filter(None, fs_diff_rq_content.split("\n")))
 
-                fs_diff_urn_content = generate_diff_report(base_fs_root, after_fs_root, "urN", exclude_paths)
+                fs_diff_urn_content = generate_diff_report(
+                    base_fs_root,
+                    after_fs_root,
+                    "urN",
+                    exclude_paths,
+                    omit_diff_paths,
+                )
                 output_data["diff_reports"]["filesystem_urN"] = list(
                     filter(None, re.split(r"(?=^[a-zA-Z].+$)", fs_diff_urn_content, flags=re.MULTILINE))
                 )
