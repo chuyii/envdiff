@@ -1,6 +1,6 @@
 {
     "report_metadata": {
-        "generated_on": "2025-05-19 23:12:00",
+        "generated_on": "2025-05-20 01:02:20",
         "container_tool": "podman"
     },
     "definitions": {
@@ -8,7 +8,7 @@
         "prepare": {
             "copy_files": [
                 {
-                    "src": "./input.yaml",
+                    "src": "example-input.yaml",
                     "dest": "/root/input.yaml"
                 }
             ],
@@ -68,14 +68,14 @@
         },
         {
             "command": "dnf -y install tigervnc-license",
-            "stdout": "AlmaLinux 9 - AppStream                         7.3 MB/s |  17 MB     00:02    \nAlmaLinux 9 - BaseOS                            7.9 MB/s |  21 MB     00:02    \nAlmaLinux 9 - Extras                             20 kB/s |  13 kB     00:00    \nDependencies resolved.\n================================================================================\n Package               Arch        Version                 Repository      Size\n================================================================================\nInstalling:\n tigervnc-license      noarch      1.14.1-1.el9_5.1        appstream       17 k\n\nTransaction Summary\n================================================================================\nInstall  1 Package\n\nTotal download size: 17 k\nInstalled size: 18 k\nDownloading Packages:\ntigervnc-license-1.14.1-1.el9_5.1.noarch.rpm    500 kB/s |  17 kB     00:00    \n--------------------------------------------------------------------------------\nTotal                                            25 kB/s |  17 kB     00:00     \nRunning transaction check\nTransaction check succeeded.\nRunning transaction test\nTransaction test succeeded.\nRunning transaction\n  Preparing        :                                                        1/1 \n  Installing       : tigervnc-license-1.14.1-1.el9_5.1.noarch               1/1 \n  Verifying        : tigervnc-license-1.14.1-1.el9_5.1.noarch               1/1 \n\nInstalled:\n  tigervnc-license-1.14.1-1.el9_5.1.noarch                                      \n\nComplete!",
+            "stdout": "AlmaLinux 9 - AppStream                         5.5 MB/s |  17 MB     00:03    \nAlmaLinux 9 - BaseOS                            5.3 MB/s |  21 MB     00:03    \nAlmaLinux 9 - Extras                             18 kB/s |  13 kB     00:00    \nDependencies resolved.\n================================================================================\n Package               Arch        Version                 Repository      Size\n================================================================================\nInstalling:\n tigervnc-license      noarch      1.14.1-1.el9_5.1        appstream       17 k\n\nTransaction Summary\n================================================================================\nInstall  1 Package\n\nTotal download size: 17 k\nInstalled size: 18 k\nDownloading Packages:\ntigervnc-license-1.14.1-1.el9_5.1.noarch.rpm    3.5 kB/s |  17 kB     00:04    \n--------------------------------------------------------------------------------\nTotal                                           3.1 kB/s |  17 kB     00:05     \nRunning transaction check\nTransaction check succeeded.\nRunning transaction test\nTransaction test succeeded.\nRunning transaction\n  Preparing        :                                                        1/1 \n  Installing       : tigervnc-license-1.14.1-1.el9_5.1.noarch               1/1 \n  Verifying        : tigervnc-license-1.14.1-1.el9_5.1.noarch               1/1 \n\nInstalled:\n  tigervnc-license-1.14.1-1.el9_5.1.noarch                                      \n\nComplete!",
             "stderr": "",
             "return_code": 0
         }
     ],
     "diff_reports": {
         "filesystem_rq": [
-            "Only in fs_after/root: input.yaml",
+            "Files fs_base/root/input.yaml and fs_after/root/input.yaml differ",
             "Only in fs_after/root: test"
         ],
         "filesystem_urN": [

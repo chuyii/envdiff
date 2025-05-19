@@ -1,4 +1,4 @@
-Report generated on: 2025-05-19 23:12:00
+Report generated on: 2025-05-20 01:02:20
 Container tool: podman
 
 Definitions:
@@ -6,7 +6,7 @@ Definitions:
   quay.io/almalinuxorg/9-base:9.5
 - prepare:
   copy_files:
-    - ./input.yaml -> /root/input.yaml
+    - example-input.yaml -> /root/input.yaml
   commands:
     - echo "initial setup" > /root/init
     - echo tmp > /tmp/test
@@ -29,9 +29,9 @@ Main operation results:
 - echo test > /root/test/tmp (exit code 0)
 - dnf -y install tigervnc-license (exit code 0)
   stdout:
-    AlmaLinux 9 - AppStream                         7.3 MB/s |  17 MB     00:02    
-    AlmaLinux 9 - BaseOS                            7.9 MB/s |  21 MB     00:02    
-    AlmaLinux 9 - Extras                             20 kB/s |  13 kB     00:00    
+    AlmaLinux 9 - AppStream                         5.5 MB/s |  17 MB     00:03    
+    AlmaLinux 9 - BaseOS                            5.3 MB/s |  21 MB     00:03    
+    AlmaLinux 9 - Extras                             18 kB/s |  13 kB     00:00    
     Dependencies resolved.
     ================================================================================
      Package               Arch        Version                 Repository      Size
@@ -46,9 +46,9 @@ Main operation results:
     Total download size: 17 k
     Installed size: 18 k
     Downloading Packages:
-    tigervnc-license-1.14.1-1.el9_5.1.noarch.rpm    500 kB/s |  17 kB     00:00    
+    tigervnc-license-1.14.1-1.el9_5.1.noarch.rpm    3.5 kB/s |  17 kB     00:04    
     --------------------------------------------------------------------------------
-    Total                                            25 kB/s |  17 kB     00:00     
+    Total                                           3.1 kB/s |  17 kB     00:05     
     Running transaction check
     Transaction check succeeded.
     Running transaction test
@@ -64,7 +64,7 @@ Main operation results:
     Complete!
 
 Filesystem diff (rq):
-  - Only in fs_after/root: input.yaml
+  - Files fs_base/root/input.yaml and fs_after/root/input.yaml differ
   - Only in fs_after/root: test
 
 Filesystem diff (urN):
@@ -86,4 +86,3 @@ Command diff for: rpm -qa | sort (file: pkglist.txt)
    tpm2-tss-3.2.3-1.el9.x86_64
    tzdata-2025b-1.el9.noarch
    usermode-1.114-5.el9.x86_64
-

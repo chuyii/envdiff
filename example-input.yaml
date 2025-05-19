@@ -2,7 +2,7 @@ base_image: quay.io/almalinuxorg/9-base:9.5
 
 prepare:
   copy_files:
-    - src: ./input.yaml
+    - src: example-input.yaml
       dest: /root/input.yaml
   commands:
     - echo "initial setup" > /root/init
