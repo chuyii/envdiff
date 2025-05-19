@@ -19,16 +19,27 @@ This will provide the `envdiff` command for running the tool.
 
 ## Usage
 
-1. Prepare a YAML configuration file. An example is provided in `example-input.yaml`.
+1. Prepare a YAML configuration file. An example is provided in `example-input.yaml`. See the next section for available keys.
 2. Run the tool with:
 
 ```bash
-python -m envdiff.cli --input example-input.yaml --output output.json
+envdiff --input example-input.yaml --output output.json
 ```
 
 By default `podman` is used. To use Docker instead, pass `--container-tool docker`.
 
 The resulting report is written to `output.json`. An example output is included in `example-output.json`.
+### Input YAML structure
+The configuration file uses these keys:
+- `base_image` (required): container image to analyze.
+- `prepare.copy_files`: list of `{src, dest}` pairs copied into the container before running any commands.
+- `prepare.commands`: commands executed before capturing the baseline state.
+- `main_operation.commands`: commands executed during the main operation under analysis.
+- `target_dirs`: directories inside the container to export and compare.
+- `exclude_paths`: paths excluded from file system diff results.
+- `omit_diff_paths`: paths whose diff hunks are omitted in the unified diff.
+- `command_diff`: list of commands to capture and diff; each requires `command` and `outfile`.
+
 
 ### Formatting a JSON report
 
