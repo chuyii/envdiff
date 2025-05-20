@@ -105,3 +105,24 @@ def test_title_collapsed_to_single_line(tmp_path: Path) -> None:
     result = load_config(cfg)
     assert result["title"] == "Hello World"
 
+
+def test_duplicate_lists_deduped(tmp_path: Path) -> None:
+    cfg = tmp_path / "cfg.yaml"
+    cfg.write_text(
+        """
+target_dirs:
+  - /etc
+  - /etc
+exclude_paths:
+  - /a
+  - /a
+omit_diff_paths:
+  - b
+  - b
+"""
+    )
+    result = load_config(cfg)
+    assert result["target_dirs"] == ["/etc"]
+    assert result["exclude_paths"] == ["/a"]
+    assert result["omit_diff_paths"] == ["b"]
+
