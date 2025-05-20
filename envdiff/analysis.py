@@ -90,6 +90,20 @@ def load_config(config_path: Path, *, _root_dir: Path | None = None) -> dict:
     if isinstance(title, str):
         combined["title"] = " ".join(title.splitlines())
 
+    # Remove duplicates from specific list entries
+    def _dedup(seq: list) -> list:
+        seen = set()
+        result = []
+        for item in seq:
+            if item not in seen:
+                seen.add(item)
+                result.append(item)
+        return result
+
+    for key in ("target_dirs", "exclude_paths", "omit_diff_paths"):
+        if isinstance(combined.get(key), list):
+            combined[key] = _dedup(combined[key])
+
     logger.info("Configuration loaded successfully.")
     return combined
 
