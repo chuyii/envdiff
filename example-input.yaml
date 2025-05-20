@@ -1,5 +1,5 @@
 title: Example diff
-description: |
+description: |-
   Example configuration for envdiff.
 base_image: quay.io/almalinuxorg/9-base:9.5
 

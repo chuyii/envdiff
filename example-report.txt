@@ -1,4 +1,4 @@
-Report generated on: 2025-05-20 01:02:20
+Report generated on: 2025-05-20 22:36:13
 Container tool: podman
 Title: Example diff
 Description:
@@ -32,9 +32,9 @@ Main operation results:
 - echo test > /root/test/tmp (exit code 0)
 - dnf -y install tigervnc-license (exit code 0)
   stdout:
-    AlmaLinux 9 - AppStream                         5.5 MB/s |  17 MB     00:03    
-    AlmaLinux 9 - BaseOS                            5.3 MB/s |  21 MB     00:03    
-    AlmaLinux 9 - Extras                             18 kB/s |  13 kB     00:00    
+    AlmaLinux 9 - AppStream                         7.3 MB/s |  17 MB     00:02    
+    AlmaLinux 9 - BaseOS                            2.7 MB/s |  21 MB     00:07    
+    AlmaLinux 9 - Extras                             21 kB/s |  13 kB     00:00    
     Dependencies resolved.
     ================================================================================
      Package               Arch        Version                 Repository      Size
@@ -49,9 +49,9 @@ Main operation results:
     Total download size: 17 k
     Installed size: 18 k
     Downloading Packages:
-    tigervnc-license-1.14.1-1.el9_5.1.noarch.rpm    3.5 kB/s |  17 kB     00:04    
+    tigervnc-license-1.14.1-1.el9_5.1.noarch.rpm    511 kB/s |  17 kB     00:00    
     --------------------------------------------------------------------------------
-    Total                                           3.1 kB/s |  17 kB     00:05     
+    Total                                            26 kB/s |  17 kB     00:00     
     Running transaction check
     Transaction check succeeded.
     Running transaction test
@@ -89,3 +89,4 @@ Command diff for: rpm -qa | sort (file: pkglist.txt)
    tpm2-tss-3.2.3-1.el9.x86_64
    tzdata-2025b-1.el9.noarch
    usermode-1.114-5.el9.x86_64
+
