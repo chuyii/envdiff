@@ -7,7 +7,12 @@ from envdiff.report_formatter import json_report_to_text
 
 def test_json_report_to_text(tmp_path: Path):
     data = {
-        "report_metadata": {"generated_on": "2020-01-01", "container_tool": "podman"},
+        "report_metadata": {
+            "generated_on": "2020-01-01",
+            "container_tool": "podman",
+            "title": "My run",
+            "description": "line1\nline2",
+        },
         "definitions": {
             "base_image": "alpine:latest",
             "prepare": {"commands": ["setup"]},
@@ -39,6 +44,10 @@ def test_json_report_to_text(tmp_path: Path):
     text = json_report_to_text(report)
 
     assert "Report generated on: 2020-01-01" in text
+    assert "Title: My run" in text
+    assert "Description:" in text
+    assert "  line1" in text
+    assert "  line2" in text
     assert "- echo hi (exit code 0)" in text
     assert "Definitions:" in text
     assert "- base_image:" in text

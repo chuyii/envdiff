@@ -95,3 +95,13 @@ def test_copy_files_paths_resolved_with_extends(tmp_path: Path) -> None:
     paths = [e["src"] for e in result["prepare"]["copy_files"]]
     assert paths == ["../parent/p.txt", "c.txt"]
 
+
+def test_title_collapsed_to_single_line(tmp_path: Path) -> None:
+    cfg = tmp_path / "cfg.yaml"
+    cfg.write_text("""title: |
+  Hello
+  World
+""")
+    result = load_config(cfg)
+    assert result["title"] == "Hello World"
+

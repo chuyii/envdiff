@@ -17,6 +17,13 @@ def json_report_to_text(report_path: Path) -> str:
     meta = data.get("report_metadata", {})
     lines.append(f"Report generated on: {meta.get('generated_on', 'unknown')}")
     lines.append(f"Container tool: {meta.get('container_tool', 'unknown')}")
+    title = meta.get("title")
+    if title:
+        lines.append(f"Title: {title}")
+    desc = meta.get("description")
+    if desc:
+        lines.append("Description:")
+        lines.append(_indent_block(str(desc), 2))
     lines.append("")
 
     definitions = data.get("definitions", {})

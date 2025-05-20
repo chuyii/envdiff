@@ -1,5 +1,8 @@
 Report generated on: 2025-05-20 01:02:20
 Container tool: podman
+Title: Example diff
+Description:
+  Example configuration for envdiff.
 
 Definitions:
 - base_image:
