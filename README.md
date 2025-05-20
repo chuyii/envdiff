@@ -37,6 +37,8 @@ An example output file is included in `example-output.json`.
 The configuration file uses these keys:
 - `extends`: list of additional YAML files to load before this file. Lists are
   concatenated while other keys are overwritten by later files.
+- `title`: optional short title for the report. Multi-line values are collapsed into a single line.
+- `description`: optional description text shown in summaries.
 - `base_image` (required): container image to analyze.
 - `prepare.copy_files`: list of `{src, dest}` pairs copied into the container before running any commands. Relative `src` paths are interpreted relative to the configuration file passed via `--input`.
 - `prepare.commands`: commands executed before capturing the baseline state.

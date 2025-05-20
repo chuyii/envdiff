@@ -85,6 +85,11 @@ def load_config(config_path: Path, *, _root_dir: Path | None = None) -> dict:
 
     config.pop("extends", None)
     combined = _merge_dicts(combined, config)
+
+    title = combined.get("title")
+    if isinstance(title, str):
+        combined["title"] = " ".join(title.splitlines())
+
     logger.info("Configuration loaded successfully.")
     return combined
 
@@ -93,6 +98,8 @@ def run_analysis(config_path: Path, output_report_path: Path, container_tool: st
     """Main analysis workflow."""
     config = load_config(config_path)
     root_dir = config_path.parent
+    title = config.pop("title", None)
+    description = config.pop("description", None)
     base_image = config.get("base_image")
     if not base_image:
         logger.error("Configuration error: 'base_image' not specified in input YAML.")
@@ -102,6 +109,8 @@ def run_analysis(config_path: Path, output_report_path: Path, container_tool: st
         "report_metadata": {
             "generated_on": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "container_tool": container_tool,
+            **({"title": title} if title else {}),
+            **({"description": description} if description else {}),
         },
         "definitions": config,
         "main_operation_results": [],

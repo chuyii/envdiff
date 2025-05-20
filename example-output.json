@@ -1,7 +1,9 @@
 {
     "report_metadata": {
         "generated_on": "2025-05-20 01:02:20",
-        "container_tool": "podman"
+        "container_tool": "podman",
+        "title": "Example diff",
+        "description": "Example configuration for envdiff."
     },
     "definitions": {
         "base_image": "quay.io/almalinuxorg/9-base:9.5",
