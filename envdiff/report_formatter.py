@@ -98,7 +98,12 @@ def json_report_to_text(report_path: Path) -> str:
 
     lines.append("Filesystem diff (urN):")
     for item in diff_reports.get("filesystem_urN", []):
-        lines.append(_indent_block(item, 2))
+        diff_lines = item.splitlines()
+        if not diff_lines:
+            continue
+        lines.append(f"  - {diff_lines[0]}")
+        for diff_line in diff_lines[1:]:
+            lines.append(f"    {diff_line}")
     lines.append("")
 
     for entry in diff_reports.get("command_outputs", []):

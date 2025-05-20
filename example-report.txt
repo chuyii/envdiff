@@ -68,12 +68,12 @@ Filesystem diff (rq):
   - Only in fs_after/root: test
 
 Filesystem diff (urN):
-  diff -urN fs_base/root/input.yaml fs_after/root/input.yaml (omitted)
-  diff -urN fs_base/root/test/tmp fs_after/root/test/tmp
-  --- fs_base/root/test/tmp
-  +++ fs_after/root/test/tmp
-  @@ -0,0 +1 @@
-  +test
+  - diff -urN fs_base/root/input.yaml fs_after/root/input.yaml (omitted)
+  - diff -urN fs_base/root/test/tmp fs_after/root/test/tmp
+    --- fs_base/root/test/tmp
+    +++ fs_after/root/test/tmp
+    @@ -0,0 +1 @@
+    +test
 
 Command diff for: rpm -qa | sort (file: pkglist.txt)
   --- cmd_outputs_base/pkglist.txt
