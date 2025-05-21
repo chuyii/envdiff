@@ -209,7 +209,10 @@ def run_analysis(config_path: Path, output_report_path: Path, container_tool: st
                     omit_diff_paths,
                 )
                 output_data["diff_reports"]["filesystem_urN"] = list(
-                    filter(None, re.split(r"(?=^[a-zA-Z].+$)", fs_diff_urn_content, flags=re.MULTILINE))
+                    map(
+                        lambda l: l[:-1],
+                        filter(None, re.split(r"(?=^[a-zA-Z].+$)", fs_diff_urn_content, flags=re.MULTILINE))
+                    )
                 )
             else:
                 logger.info("Skipping filesystem diffs as 'target_dirs' was empty.")
@@ -232,7 +235,7 @@ def run_analysis(config_path: Path, output_report_path: Path, container_tool: st
                 }
                 if base_cmd_file.exists() and after_cmd_file.exists():
                     cmd_diff_content = generate_diff_report(base_cmd_file, after_cmd_file, "text")
-                    command_diff_entry["diff_content"] = cmd_diff_content
+                    command_diff_entry["diff_content"] = cmd_diff_content[:-1]
                 else:
                     missing_files_info = []
                     if not base_cmd_file.exists():

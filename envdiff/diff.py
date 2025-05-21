@@ -78,6 +78,7 @@ def generate_diff_report(
 
 def _omit_diff_details(diff_text: str, paths: List[str]) -> str:
     """Remove diff hunks for specific paths and mark the omission."""
+    keep_newline = diff_text.endswith("\n")
     lines = diff_text.splitlines()
     filtered_lines: List[str] = []
     skip = False
@@ -91,4 +92,7 @@ def _omit_diff_details(diff_text: str, paths: List[str]) -> str:
         else:
             if not skip:
                 filtered_lines.append(line)
-    return "\n".join(filtered_lines)
+    result = "\n".join(filtered_lines)
+    if keep_newline and result:
+        result += "\n"
+    return result
